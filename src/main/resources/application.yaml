@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: ragdoc
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ragdoc
+    username: cbksb
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  ai:
+    openai:
+      api-key: YOUR_OPENAI_API_KEY_HERE
+
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: mistral:7b-instruct-q4_K_M
+
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+

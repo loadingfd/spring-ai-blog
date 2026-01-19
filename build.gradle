@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.9'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.ldfd'
+version = '0.0.1-SNAPSHOT'
+description = 'ragdoc'
+
+ext {
+    mapstructVersion = "1.6.3"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation 'org.springframework.ai:spring-ai-starter-model-ollama' // Ollama API
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    testImplementation "org.testng:testng:6.10", "org.easytesting:fest-assert:1.4"
+
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.6.3"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '-Amapstruct.suppressGeneratorTimestamp=true',
+        '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
