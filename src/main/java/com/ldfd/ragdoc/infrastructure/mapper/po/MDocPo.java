@@ -7,7 +7,7 @@ import java.time.Instant;
 
 @Data
 @Entity
-@Table(name = "ragdoc")
+@Table(name = "mdoc")
 public class MDocPo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

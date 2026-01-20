@@ -1,3 +1,5 @@
+-- psql -U cbksb -d ragdb
+
 -- SQL (用于在 psql 客户端执行)
 -- 1) 创建数据库（只需运行一次）
 CREATE DATABASE ragdb;
@@ -11,22 +13,18 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE document_chunk (
     id BIGSERIAL PRIMARY KEY,
     content TEXT NOT NULL,
-    embedding VECTOR(1536) NOT NULL
+    embedding VECTOR(1024) NOT NULL
 );
 
--- CREATE INDEX idx_chunk_embedding
--- ON document_chunk USING ivfflat (embedding vector_l2_ops)
--- WITH (lists = 100);
 
-CREATE INDEX hnsw_idx_chunking_embedding ON document_chunk USING hnsw (embedding vector_l2_ops)
+CREATE INDEX hnsw_idx_chunking_embedding ON document_chunk USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 
-CREATE TABLE ragdoc (
+CREATE TABLE mdoc (
     id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-alter table ragdoc add column updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

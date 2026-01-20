@@ -37,7 +37,7 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-starter-model-ollama' // Ollama API
     // MapStruct
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-    testImplementation "org.testng:testng:6.10", "org.easytesting:fest-assert:1.4"
+    testImplementation 'org.testng:testng:7.7.0', "org.easytesting:fest-assert:1.4"
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'

@@ -1,28 +1,27 @@
 package com.ldfd.ragdoc.adapter.controller;
 
+import com.ldfd.ragdoc.adapter.common.Result;
 import com.ldfd.ragdoc.adapter.controller.dto.MessageDTO;
+import com.ldfd.ragdoc.application.ChatService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/chat")
 public class ChatContoller {
 
-    private final OllamaChatModel ollamaChatModel;
+    private final ChatService ragService;
 
+    /**
+     * 单轮对话（原有接口，保持兼容）
+     */
     @PostMapping
-    public String chat(@RequestBody MessageDTO message){
+    public Result<String> chat(@RequestBody MessageDTO message){
         String msg = message.getMessage();
-        Prompt prompt = new Prompt(new UserMessage(msg));
-        ChatResponse response = ollamaChatModel.call(prompt);
-        return response.getResult().getOutput().getText();
+        String reply = ragService.chat(msg);
+        return new Result<>(reply);
     }
+
+
 }

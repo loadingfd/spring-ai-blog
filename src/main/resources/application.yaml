@@ -3,7 +3,7 @@ spring:
     name: ragdoc
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ragdoc
+    url: jdbc:postgresql://localhost:5432/ragdb
     username: cbksb
     password: 123456
     driver-class-name: org.postgresql.Driver
@@ -16,11 +16,16 @@ spring:
       base-url: http://localhost:11434
       chat:
         model: mistral:7b-instruct-q4_K_M
+      embedding:
+        model: bge-m3
+
+    model:
+      embedding: ollama
 
     vectorstore:
       pgvector:
         index-type: HNSW
         distance-type: COSINE_DISTANCE
-        dimensions: 1536
+        dimensions: 1024  # bge-m3 outputs 1024-dimensional embeddings
         max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
 
