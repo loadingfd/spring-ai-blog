@@ -1,29 +1,37 @@
 package com.ldfd.ragdoc.application;
 
-import com.ldfd.ragdoc.domain.MDocRepository;
-import com.ldfd.ragdoc.infrastructure.mapper.MDocPoMapper;
+import com.ldfd.ragdoc.application.vo.MessageVo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final OllamaChatModel ollamaChatModel;
-    private final MDocRepository mDocRepository;
-    private final MDocPoMapper mDocPoMapper;
+    private final ChatClient chatClient;
 
     /**
-     * 单轮对话（兼容原有接口）
+     * 多轮对话 - 在指定会话中发送消息
      */
-    public String chat(String message) {
-        Prompt prompt = new Prompt(new UserMessage(message));
-        ChatResponse response = ollamaChatModel.call(prompt);
-        return response.getResult().getOutput().getText();
+    public MessageVo chat(String message, String conversationId) {
+        String ret = chatClient.prompt()
+                .user(message)
+                .advisors(a -> a.param(CONVERSATION_ID, conversationId))
+                .call()
+                .content();
+
+        return MessageVo.builder()
+                .sessionId(conversationId)
+                .content(ret)
+                .build();
     }
+
+
+
 
 }

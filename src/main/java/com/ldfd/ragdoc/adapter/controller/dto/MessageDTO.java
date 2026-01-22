@@ -1,11 +1,15 @@
 package com.ldfd.ragdoc.adapter.controller.dto;
 
-import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.UUID;
 
 @Data
 public class MessageDTO {
 
-    @Nonnull
-    String message;
+    String sessionId;
+
+    @NotBlank
+    String content;
 }

@@ -1,4 +1,4 @@
-package com.ldfd.ragdoc.config;
+package com.ldfd.ragdoc.exception.handler;
 
 import com.ldfd.ragdoc.adapter.common.Result;
 import com.ldfd.ragdoc.exception.BusinessException;
