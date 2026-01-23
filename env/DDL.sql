@@ -10,16 +10,6 @@ CREATE DATABASE ragdb;
 -- 3) 在 ragdb 中创建扩展、表和索引
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE document_chunk (
-    id BIGSERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
-    embedding VECTOR(1024) NOT NULL
-);
-
-
-CREATE INDEX hnsw_idx_chunking_embedding ON document_chunk USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 16, ef_construction = 64);
-
 CREATE TABLE mdoc (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -51,3 +41,22 @@ CREATE INDEX idx_chat_message_session_id ON chat_message(session_id);
 
 -- ALTER TABLE chat_message
 --     ALTER COLUMN session_id TYPE UUID USING session_id::uuid;
+
+CREATE TABLE content_hash (
+    id BIGSERIAL PRIMARY KEY,
+    content_hash TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS users (
+                                     id BIGSERIAL PRIMARY KEY,
+                                     username VARCHAR(255) NOT NULL UNIQUE,
+                                     email VARCHAR(255) NOT NULL UNIQUE,
+                                     password VARCHAR(255) NOT NULL,
+                                     full_name VARCHAR(255),
+                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

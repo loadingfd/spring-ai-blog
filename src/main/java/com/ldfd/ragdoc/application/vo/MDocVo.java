@@ -1,18 +1,12 @@
-package com.ldfd.ragdoc.infrastructure.mapper.po;
+package com.ldfd.ragdoc.application.vo;
 
-import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-@Entity
-@Table(name = "mdoc")
-public class MDocPo {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class MDocVo {
     private Long id;
-
     private Long userId;
     private String title;
     private String content;

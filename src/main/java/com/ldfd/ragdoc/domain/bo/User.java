@@ -9,15 +9,16 @@ import java.time.Instant;
 
 @Data
 @ToString(doNotUseGetters = true)
-public class MDoc implements Serializable {
+public class User implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     Long id;
-    Long userId;
-    String title;
-    String content;
+    String username;
+    String email;
+    String password;
+    String fullName;
     Instant createdAt;
     Instant updatedAt;
 }
