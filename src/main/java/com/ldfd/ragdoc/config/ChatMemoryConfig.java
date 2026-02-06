@@ -15,4 +15,10 @@ public class ChatMemoryConfig {
                 .chatMemoryRepository(chatMemoryRepository)
                 .build();
     }
+
+    @Bean("inMemoryChatMemory")
+    ChatMemory inMemoryChatMemory() {
+        return MessageWindowChatMemory.builder()
+                .build();
+    }
 }

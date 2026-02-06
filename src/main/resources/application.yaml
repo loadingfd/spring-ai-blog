@@ -10,14 +10,26 @@ spring:
 
   ai:
     openai:
-      api-key: YOUR_OPENAI_API_KEY_HERE
+      api-key: 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
+#      base-url: https://openrouter.ai/api
+#      chat:
+#        options:
+#          model: z-ai/glm-4.5-air:free
+#          max-tokens: 131072
+
 
     ollama:
       base-url: http://localhost:11434
       chat:
-        model: mistral:7b-instruct-q4_K_M
+        model: qwen3:8b
       embedding:
         model: bge-m3
+
+    zhipuai:
+      api-key: ${ZHIPUAI_API_KEY}
+      chat:
+        options:
+          model: glm-4.5-air
 
     model:
       embedding: ollama
@@ -37,3 +49,17 @@ spring:
         max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
         initialize-schema: true # Automatically create the vector_store table if it doesn't exist
 
+jwt:
+  secret: ${JWT_SECRET:dev-secret-key-only-for-local-testing-change-in-production}
+  expiration: 86400000 # 24 hours in milliseconds
+
+searxng:
+  base-url: http://localhost:8888
+  timeout: 10000 # 10 seconds in milliseconds
+  max-results: 5 # Maximum number of search results to return
+
+# Logging Configuration
+logging:
+  level:
+    root: info
+    com.ldfd.ragdoc: debug

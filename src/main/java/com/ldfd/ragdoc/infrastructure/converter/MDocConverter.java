@@ -1,4 +1,4 @@
-package com.ldfd.ragdoc.application.mapper;
+package com.ldfd.ragdoc.infrastructure.converter;
 
 import com.ldfd.ragdoc.adapter.controller.dto.MDocDTO;
 import com.ldfd.ragdoc.application.vo.MDocVo;
@@ -9,7 +9,7 @@ import org.mapstruct.Mapper;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface MDocMapper {
+public interface MDocConverter {
 
     MDoc poToBo(MDocPo po);
 

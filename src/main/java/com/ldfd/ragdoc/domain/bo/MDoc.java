@@ -18,6 +18,7 @@ public class MDoc implements Serializable {
     Long userId;
     String title;
     String content;
+    Boolean processed;
     Instant createdAt;
     Instant updatedAt;
 }

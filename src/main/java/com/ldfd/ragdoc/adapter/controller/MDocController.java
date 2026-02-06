@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/mdoc")
+@RequestMapping("/mdocs")
 @RequiredArgsConstructor
 @Validated
 public class MDocController {
@@ -26,6 +26,12 @@ public class MDocController {
     @GetMapping("/{id}")
     public Result<MDocVo> get(@PathVariable Long id) {
         return new Result<>(mDocService.getById(id));
+    }
+
+    @GetMapping("/user/{userId}")
+    public Result<List<MDocVo>> listByUserId(@PathVariable Long userId) {
+        // Retrieve documents for a specific user
+        return new Result<>(mDocService.listByUserId(userId));
     }
 
     @GetMapping

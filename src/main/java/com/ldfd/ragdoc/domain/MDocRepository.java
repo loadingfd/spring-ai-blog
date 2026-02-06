@@ -1,6 +1,8 @@
 package com.ldfd.ragdoc.domain;
 
+import com.ldfd.ragdoc.domain.bo.MDoc;
 import com.ldfd.ragdoc.exception.BusinessException;
+import com.ldfd.ragdoc.infrastructure.converter.MDocConverter;
 import com.ldfd.ragdoc.infrastructure.mapper.MDocPoMapper;
 import com.ldfd.ragdoc.infrastructure.mapper.po.MDocPo;
 import lombok.RequiredArgsConstructor;
@@ -14,32 +16,47 @@ import java.util.List;
 public class MDocRepository {
 
     private final MDocPoMapper mDocPoMapper;
+    private final MDocConverter mDocConverter;
 
-    public MDocPo save(MDocPo mDocPo) {
-        Assert.notNull(mDocPo, "mDocPo is required");
-        return mDocPoMapper.save(mDocPo);
+    public MDoc save(MDoc mDoc) {
+        Assert.notNull(mDoc, "mDoc is required");
+        MDocPo po = mDocConverter.boToPo(mDoc);
+        MDocPo saved = mDocPoMapper.save(po);
+        return mDocConverter.poToBo(saved);
     }
 
-    public MDocPo update(MDocPo mDocPo) {
-        Assert.notNull(mDocPo, "mDocPo is required");
-        Assert.notNull(mDocPo.getId(), "mDocPo id is required for update");
+    public MDoc update(MDoc mDoc) {
+        Assert.notNull(mDoc, "mDoc is required");
+        Assert.notNull(mDoc.getId(), "mDoc id is required for update");
 
-        if (!mDocPoMapper.existsById(mDocPo.getId())) {
-            throw new BusinessException("404", "MDoc not found with id: " + mDocPo.getId());
+        if (!mDocPoMapper.existsById(mDoc.getId())) {
+            throw new BusinessException("404", "MDoc not found with id: " + mDoc.getId());
         }
 
-        return mDocPoMapper.save(mDocPo);
+        MDocPo po = mDocConverter.boToPo(mDoc);
+        MDocPo updated = mDocPoMapper.save(po);
+        return mDocConverter.poToBo(updated);
     }
 
-    public MDocPo findById(Long id) {
+    public MDoc findById(Long id) {
         Assert.notNull(id, "id is required");
 
-        return mDocPoMapper.findById(id)
+        MDocPo po = mDocPoMapper.findById(id)
                 .orElseThrow(() -> new BusinessException("404", "MDoc not found with id: " + id));
+        return mDocConverter.poToBo(po);
     }
 
-    public List<MDocPo> findAll() {
-        return mDocPoMapper.findAll();
+    public List<MDoc> findAll() {
+        return mDocPoMapper.findAll().stream()
+                .map(mDocConverter::poToBo)
+                .toList();
+    }
+
+    public List<MDoc> findByUserId(Long userId) {
+        Assert.notNull(userId, "userId is required");
+        return mDocPoMapper.findByUserId(userId).stream()
+                .map(mDocConverter::poToBo)
+                .toList();
     }
 
     public void deleteById(Long id) {

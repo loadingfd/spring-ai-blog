@@ -1,4 +1,4 @@
-package com.ldfd.ragdoc.application.mapper;
+package com.ldfd.ragdoc.infrastructure.converter;
 
 import com.ldfd.ragdoc.adapter.controller.dto.UserDTO;
 import com.ldfd.ragdoc.application.vo.UserVo;
@@ -12,7 +12,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserConverter {
 
     User poToBo(UserPo po);
 

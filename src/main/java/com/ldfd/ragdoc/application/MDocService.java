@@ -2,57 +2,67 @@ package com.ldfd.ragdoc.application;
 
 import com.ldfd.ragdoc.adapter.controller.dto.MDocDTO;
 import com.ldfd.ragdoc.application.vo.MDocVo;
-import com.ldfd.ragdoc.application.mapper.MDocMapper;
+import com.ldfd.ragdoc.exception.BusinessException;
+import com.ldfd.ragdoc.infrastructure.converter.MDocConverter;
 import com.ldfd.ragdoc.domain.MDocRepository;
 import com.ldfd.ragdoc.domain.bo.MDoc;
-import com.ldfd.ragdoc.infrastructure.mapper.po.MDocPo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class MDocService {
 
+    private final AuthService authService;
     private final MDocRepository mDocRepository;
-    private final MDocMapper mDocMapper;
+    private final MDocConverter mDocConverter;
 
     @Transactional
     public MDocVo create(MDocDTO request) {
-        MDoc mDoc = mDocMapper.dtoToBo(request);
+        MDoc mDoc = mDocConverter.dtoToBo(request);
         Instant now = Instant.now();
         mDoc.setCreatedAt(now);
         mDoc.setUpdatedAt(now);
 
-        MDocPo saved = mDocRepository.save(mDocMapper.boToPo(mDoc));
-        return mDocMapper.boToVo(mDocMapper.poToBo(saved));
+        MDoc saved = mDocRepository.save(mDoc);
+        return mDocConverter.boToVo(saved);
     }
 
     public MDocVo getById(Long id) {
-        MDocPo po = mDocRepository.findById(id);
-        return mDocMapper.boToVo(mDocMapper.poToBo(po));
+        Long userId = authService.getUserId();
+        MDoc mDoc = mDocRepository.findById(id);
+        if (!Objects.equals(userId, mDoc.getUserId())) {
+            throw new BusinessException("Unauthorized access to document");
+        }
+        return mDocConverter.boToVo(mDoc);
+    }
+
+    public List<MDocVo> listByUserId(Long userId) {
+        List<MDoc> boList = mDocRepository.findByUserId(userId);
+        return mDocConverter.boListToVo(boList);
     }
 
     public List<MDocVo> list() {
-        List<MDoc> boList = mDocRepository.findAll().stream()
-                .map(mDocMapper::poToBo)
-                .toList();
-        return mDocMapper.boListToVo(boList);
+        List<MDoc> boList = mDocRepository.findAll();
+        return mDocConverter.boListToVo(boList);
     }
 
     @Transactional
     public MDocVo update(Long id, MDocDTO request) {
-        MDoc existing = mDocMapper.poToBo(mDocRepository.findById(id));
+        MDoc existing = mDocRepository.findById(id);
         existing.setUserId(request.getUserId());
         existing.setTitle(request.getTitle());
         existing.setContent(request.getContent());
+        existing.setProcessed(false);
         existing.setUpdatedAt(Instant.now());
 
-        MDocPo updated = mDocRepository.update(mDocMapper.boToPo(existing));
-        return mDocMapper.boToVo(mDocMapper.poToBo(updated));
+        MDoc updated = mDocRepository.update(existing);
+        return mDocConverter.boToVo(updated);
     }
 
     @Transactional

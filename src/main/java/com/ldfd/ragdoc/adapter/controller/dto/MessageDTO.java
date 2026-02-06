@@ -12,4 +12,6 @@ public class MessageDTO {
 
     @NotBlank
     String content;
+
+    Boolean useRetrieval = false;
 }

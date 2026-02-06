@@ -16,6 +16,7 @@ public class MDocPo {
     private Long userId;
     private String title;
     private String content;
+    private Boolean processed;
     private Instant createdAt;
     private Instant updatedAt;
 }

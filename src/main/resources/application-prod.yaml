@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: ragdoc
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ragdb}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  ai:
+    openai:
+      # Use environment variable: export OPENAI_API_KEY=sk-...
+      api-key: ${OPENAI_API_KEY:}
+
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        model: ${OLLAMA_CHAT_MODEL:qwen2:8b}
+      embedding:
+        model: ${OLLAMA_EMBEDDING_MODEL:bge-m3}
+
+    model:
+      embedding: ${AI_EMBEDDING_MODEL:ollama}
+
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: ${INIT_SCHEMA:always}
+            platform: postgresql
+
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1024
+        max-document-batch-size: 10000
+        initialize-schema: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 生产环境不应该自动创建表
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+
+# JWT Configuration - MUST use environment variables in production
+jwt:
+  secret: ${JWT_SECRET}  # 必须通过环境变量设置，建议 256-bit
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Logging Configuration
+logging:
+  level:
+    root: info
+    com.ldfd.ragdoc: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/ragdoc.log
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB

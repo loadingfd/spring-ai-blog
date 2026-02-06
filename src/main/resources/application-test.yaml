@@ -1,0 +1,8 @@
+logging:
+  level:
+    root: info
+    com.ldfd.ragdoc: debug
+#    org.springframework.web.reactive.function.client: TRACE
+#    org.springframework.ai.chat.client.advisor: DEBUG
+#    org.springframework.web: DEBUG
+#    org.springframework.ai.chat.model: DEBUG
