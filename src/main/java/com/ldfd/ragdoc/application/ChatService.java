@@ -2,7 +2,6 @@ package com.ldfd.ragdoc.application;
 
 import com.ldfd.ragdoc.adapter.controller.dto.MessageDTO;
 import com.ldfd.ragdoc.application.vo.MessageVo;
-import com.ldfd.ragdoc.infrastructure.advisor.ChatHistoryAdvisor;
 import com.ldfd.ragdoc.infrastructure.advisor.ToolAdvisor;
 import com.ldfd.ragdoc.infrastructure.ai.tool.SearchTool;
 import lombok.RequiredArgsConstructor;
@@ -12,14 +11,10 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.ToolCallAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
-import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static com.ldfd.ragdoc.infrastructure.advisor.ChatHistoryAdvisor.USER_ID;
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
@@ -83,97 +78,61 @@ public class ChatService {
     }
 
     /**
-     * 文档总结 - 通过链式Agent生成计划、Mermaid思维导图和文字总结
-     * 计划和Mermaid并行执行（同步调用），总结最后流式返回
+     * 文档总结 - 并行流式返回计划和Mermaid思维导图
+     * Agent 1 和 Agent 2 并行执行，结果流式返回
      *
      * @param docId 文档ID
      * @param sessionId 会话ID
      * @param userMessage 用户的原始问题（用于保存到聊天记录）
      */
     public Flux<MessageVo> summaryDocuments(Long docId, String sessionId, String userMessage) {
-        Long userId = authService.getUserId();
         var docVo = mDocService.getById(docId);
-
-        // 定义并行Agent的系统提示词（并行执行：计划 + Mermaid）
-        String[] parallelPrompts = {
-            // Agent 1: 分析文档，生成结构化计划
-            "请分析以下文档，生成结构化的总结计划。要求：识别主题、提取关键概念、列出3-7个主要分类和子要点。",
-
-            // Agent 2: 生成Mermaid思维导图
-                """
-                请根据文档内容和以下要求生成**可直接运行的Mermaid代码**，无需额外解释，仅输出代码块（含```mermaid标识）：
-                1. 图表类型：【替换为具体类型，如：流程图/时序图/类图/状态图/甘特图/饼图】
-                2. 核心主题：【替换为图表核心表达的内容，如：用户登录系统流程/订单支付时序/电商系统类关系】
-                3. 关键要素：【分点列出图表核心节点/步骤/元素，如：1.用户输入账号密码 2.后台验证身份 3.验证成功跳转到首页】
-                4. 样式要求（可选）：【替换为样式偏好，如：横向布局/简约风格/指定主色调/#165DFF/圆角矩形】
-                5. 输出要求：仅输出```mermaid + 代码 + ```，无多余文字、注释和说明。
-                
-                ```mermaid
-                # 【AI将在此处生成对应Mermaid代码】
-                """
-        };
 
         String initialInput = String.format("文档标题: %s\n\n文档内容:\n%s", docVo.getTitle(), docVo.getContent());
 
-        // 并行执行计划和Mermaid生成（同步调用）
-        // 注意：不使用 USER_ID advisor，避免保存中间转换的提示词到聊天记录
-        List<String> parallelResults = new ParallelizationWorkflow(chatJdbcClient)
-                .parallel(
-                        initialInput,
-                        Arrays.asList(parallelPrompts),
-                        2
-                );
+        // Agent 1: 分析文档，生成结构化计划（流式）
+        String planPrompt = "请分析以下文档，生成结构化的总结计划。要求：识别主题、提取关键概念、列出3-7个主要分类和子要点。\n\n" + initialInput;
 
-
-        // 整合并行结果
-        String plan = parallelResults.get(0);
-        String mermaidDiagram = parallelResults.get(1);
-
-        // 构建用户的原始问题（用于保存到聊天记录）
-        String originalUserQuestion = userMessage != null && !userMessage.isBlank()
-                ? userMessage
-                : String.format("请总结文档《%s》的内容，生成文字总结和思维导图", docVo.getTitle());
-
-        // 最后一个Agent：基于计划生成详细的文字总结（流式返回）
-        // 将所有内容放在user消息中，确保AI能够正确处理
-        String fullPrompt = String.format(
-                """
-                        请基于以下信息生成文档总结，并按以下格式输出：
-                        1. 首先输出「## 📝 文档总结」标题
-                        2. 然后根据总结计划生成详细的文字总结内容（结构清晰、每部分2-3段说明、突出关键概念、500-800字）
-                        3. 接着输出「## 🗺️ 思维导图」标题
-                        4. 最后输出以下Mermaid mindmap代码块（直接输出，不要修改）
-                        
-                        ===== 文档标题 =====
-                        %s
-                        
-                        ===== 总结计划 =====
-                        %s
-                        
-                        ===== Mermaid思维导图 =====
-                        %s
-                        
-                        ===== 文档内容 =====
-                        %s""",
-            docVo.getTitle(),
-            plan,
-            mermaidDiagram,
-            docVo.getContent()
-        );
-
-        // 流式返回最终结果
-        // 将完整提示词放在user消息中，通过context传递原始用户问题用于保存聊天记录
-        return chatJdbcClient.prompt()
-                .user(fullPrompt)  // 完整的提示词（包含所有内容）
-                .advisors(a -> a.param(ChatHistoryAdvisor.ORIGINAL_USER_MESSAGE, originalUserQuestion))  // 原始用户问题
-                .advisors(a -> a.param(USER_ID, userId))
-                .advisors(a -> a.param(CONVERSATION_ID, sessionId))
-                .stream()
-                .content()
-                .map(chunk -> MessageVo.builder()
+        Flux<MessageVo> planFlux = Flux.just(MessageVo.builder()
                         .sessionId(sessionId)
-                        .content(chunk)
-                        .build());
+                        .content("## 📝 文档总结计划\n\n")
+                        .build())
+                .concatWith(chatJdbcClient.prompt()
+                        .user(planPrompt)
+                        .stream()
+                        .content()
+                        .map(chunk -> MessageVo.builder()
+                                .sessionId(sessionId)
+                                .content(chunk)
+                                .build()));
+
+        // Agent 2: 生成Mermaid思维导图（流式）
+        String mermaidPrompt = """
+                请根据文档内容生成**可直接运行的Mermaid代码**，无需额外解释，仅输出代码块（含```mermaid标识）：
+                1. 图表类型：mindmap思维导图
+                2. 核心主题：文档的核心内容
+                3. 关键要素：文档的主要知识点和概念
+                4. 输出要求：仅输出```mermaid + 代码 + ```，无多余文字、注释和说明。
+                
+                """ + initialInput;
+
+        Flux<MessageVo> mermaidFlux = Flux.just(MessageVo.builder()
+                        .sessionId(sessionId)
+                        .content("\n\n## 🗺️ 思维导图\n\n")
+                        .build())
+                .concatWith(chatJdbcClient.prompt()
+                        .user(mermaidPrompt)
+                        .stream()
+                        .content()
+                        .map(chunk -> MessageVo.builder()
+                                .sessionId(sessionId)
+                                .content(chunk)
+                                .build()));
+
+        // 并行执行两个 Agent，合并流式结果
+        // 使用 concat 按顺序输出：先计划，再思维导图
+        // 如果要真正并行交错输出，可改用 Flux.merge(planFlux, mermaidFlux)
+        return Flux.concat(planFlux, mermaidFlux);
     }
 
     /**

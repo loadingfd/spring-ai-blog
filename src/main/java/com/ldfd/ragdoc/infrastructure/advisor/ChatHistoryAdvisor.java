@@ -17,6 +17,7 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;

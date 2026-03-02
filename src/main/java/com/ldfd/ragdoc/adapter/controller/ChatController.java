@@ -71,11 +71,11 @@ public class ChatController {
     }
 
     /**
-     * 文档总结 - 通过链式Agent生成计划和Mermaid思维导图
-     * 返回流式的总结内容（包含文字总结和思维导图）
+     * 文档总结 - 并行流式返回计划和Mermaid思维导图
+     * Agent 1 和 Agent 2 并行执行，结果流式返回
      *
      * @param docId 文档ID
-     * @param message 包含用户原始问题和会话ID的消息对象
+     * @param message 包含用户消息和会话ID的消息对象
      */
     @PostMapping(value = "/summary/{docId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<MessageVo> summaryDocuments(@PathVariable Long docId, @RequestBody MessageDTO message) {
@@ -87,7 +87,7 @@ public class ChatController {
         // 如果用户没有提供消息内容，使用默认消息
         String userMessage = message.getContent();
         if (userMessage == null || userMessage.isBlank()) {
-            userMessage = "请总结这个文档的内容，生成文字总结和思维导图";
+            userMessage = "请总结这个文档的内容";
         }
 
         return this.chatService.summaryDocuments(docId, message.getSessionId(), userMessage);
